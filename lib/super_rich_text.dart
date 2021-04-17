@@ -8,7 +8,7 @@ typedef OnErrorType = void Function(int index, Object msg);
 
 class MarkerText {
   /// Marker to identify in text, ex: *MY TEXT*, marker is "*"
-  final String? marker;
+  final String marker;
 
   /// Text Style
   final TextStyle? style;
@@ -296,7 +296,7 @@ class SuperRichText extends StatelessWidget {
             .allMatches(text)
             .toList()
             .map((v) => v.group(0)!)
-            .toList() 
+            .toList()
         : [];
 
     int i = 0;
