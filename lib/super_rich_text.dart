@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 enum MarkerType { function, sameFunction, text, url }
 
+typedef OnErrorType = void Function(int index, Object msg);
+
 class MarkerText {
   /// Marker to identify in text, ex: *MY TEXT*, marker is "*"
   final String? marker;
@@ -21,13 +23,13 @@ class MarkerText {
   final List<Function>? functions;
 
   /// On error occurred when called any functions above
-  final Function(int index, String msg)? onError;
+  final OnErrorType? onError;
 
   const MarkerText._internal(
       {this.urls,
-      this.marker,
-      this.style,
-      this.type,
+      required this.marker,
+      required this.style,
+      required this.type,
       this.onError,
       this.functions});
 
@@ -39,11 +41,11 @@ class MarkerText {
   factory MarkerText.withUrl(
       {required String marker,
       required List<String> urls,
-      TextStyle? style,
-      Function(int index, String msg)? onError}) {
+      TextStyle style= const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+      OnErrorType? onError}) {
     return MarkerText._internal(
       style:
-          style ?? TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+          style,
       type: MarkerType.url,
       onError: onError,
       marker: marker,
@@ -55,7 +57,7 @@ class MarkerText {
       {required String marker,
       required List<Function> functions,
       required TextStyle style,
-      Function(int index, String msg)? onError}) {
+      OnErrorType? onError}) {
     return MarkerText._internal(
         type: MarkerType.function,
         functions: functions,
@@ -68,7 +70,7 @@ class MarkerText {
       {required String marker,
       required Function function,
       required TextStyle style,
-      Function(String msg)? onError}) {
+      Function(Object msg)? onError}) {
     return MarkerText._internal(
         type: MarkerType.sameFunction,
         functions: [function],
@@ -182,11 +184,9 @@ class SuperRichText extends StatelessWidget {
         super(key: key);
 
   TextSpan getTextSpan(
-      {required RegExpMatch regex,
-      required MarkerText marker,
-      required int index}) {
+      {required RegExpMatch regex, required MarkerText marker, int? index}) {
     return TextSpan(
-        text: regex.group(0)!.replaceAll(marker.marker!, ''),
+        text: regex.group(0)!.replaceAll(marker.marker, ''),
         style: marker.style,
         recognizer: _typeWithTap.contains(marker.type)
             ? (TapGestureRecognizer()
@@ -197,7 +197,10 @@ class SuperRichText extends StatelessWidget {
                       await marker.functions![index!]();
                     } catch (msg) {
                       // ignore: unnecessary_statements
-                      marker.onError?.call(index, '$msg');
+                      marker.onError != null
+                          ? marker.onError!(index!, msg)
+                          // ignore: unnecessary_statements
+                          : null;
                     }
                     break;
 
@@ -206,10 +209,10 @@ class SuperRichText extends StatelessWidget {
                       await marker.functions![0]();
                     } catch (msg) {
                       // ignore: unnecessary_statements
-
-                      marker.onError?.call(0, '$msg');
-                      // ignore: unnecessary_statements
-
+                      marker.onError != null
+                          ? marker.onError!(0, msg)
+                          // ignore: unnecessary_statements
+                          : null;
                     }
                     break;
 
@@ -222,7 +225,10 @@ class SuperRichText extends StatelessWidget {
                       }
                     } catch (msg) {
                       // ignore: unnecessary_statements
-                      marker.onError?.call(index, '$msg');
+                      marker.onError != null
+                          ? marker.onError!(index!, msg)
+                          // ignore: unnecessary_statements
+                          : null;
                     }
                     break;
 
@@ -239,7 +245,7 @@ class SuperRichText extends StatelessWidget {
       int index = 0;
       toSplit += '$pattern|';
 
-      found.forEach((f) => texts[f.group(0)] =
+      found.forEach((f) => texts[f.group(0)!] =
           getTextSpan(regex: f, index: index++, marker: marker!));
     }
   }
@@ -289,8 +295,8 @@ class SuperRichText extends StatelessWidget {
         ? RegExp(toSplit)
             .allMatches(text)
             .toList()
-            .map((v) => v.group(0))
-            .toList()
+            .map((v) => v.group(0)!)
+            .toList() 
         : [];
 
     int i = 0;
@@ -299,7 +305,7 @@ class SuperRichText extends StatelessWidget {
       finalList.add(TextSpan(text: v));
 
       try {
-        finalList.add(texts[inSequence[i++]]);
+        finalList.add(texts[inSequence[i++]]!);
       } catch (msg) {
         //ignored
 
