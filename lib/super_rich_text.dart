@@ -25,27 +25,29 @@ class MarkerText {
   /// On error occurred when called any functions above
   final OnErrorType? onError;
 
-  const MarkerText._internal(
-      {this.urls,
-      required this.marker,
-      required this.style,
-      required this.type,
-      this.onError,
-      this.functions});
+  const MarkerText._internal({
+    this.urls,
+    required this.marker,
+    required this.style,
+    required this.type,
+    this.onError,
+    this.functions,
+  });
 
-  factory MarkerText({required String marker, required TextStyle style}) {
-    return MarkerText._internal(
-        type: MarkerType.text, marker: marker, style: style);
+  factory MarkerText({
+    required String marker,
+    required TextStyle style,
+  }) {
+    return MarkerText._internal(type: MarkerType.text, marker: marker, style: style);
   }
 
   factory MarkerText.withUrl(
       {required String marker,
       required List<String> urls,
-      TextStyle style= const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+      TextStyle style = const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
       OnErrorType? onError}) {
     return MarkerText._internal(
-      style:
-          style,
+      style: style,
       type: MarkerType.url,
       onError: onError,
       marker: marker,
@@ -53,24 +55,27 @@ class MarkerText {
     );
   }
 
-  factory MarkerText.withFunction(
-      {required String marker,
-      required List<Function> functions,
-      required TextStyle style,
-      OnErrorType? onError}) {
+  factory MarkerText.withFunction({
+    required String marker,
+    required List<Function> functions,
+    required TextStyle style,
+    OnErrorType? onError,
+  }) {
     return MarkerText._internal(
-        type: MarkerType.function,
-        functions: functions,
-        onError: onError,
-        marker: marker,
-        style: style);
+      type: MarkerType.function,
+      functions: functions,
+      onError: onError,
+      marker: marker,
+      style: style,
+    );
   }
 
-  factory MarkerText.withSameFunction(
-      {required String marker,
-      required Function function,
-      required TextStyle style,
-      Function(Object msg)? onError}) {
+  factory MarkerText.withSameFunction({
+    required String marker,
+    required Function function,
+    required TextStyle style,
+    Function(Object msg)? onError,
+  }) {
     return MarkerText._internal(
         type: MarkerType.sameFunction,
         functions: [function],
@@ -157,7 +162,7 @@ class SuperRichText extends StatelessWidget {
   final List<MarkerType> _typeWithTap = [
     MarkerType.url,
     MarkerType.function,
-    MarkerType.sameFunction
+    MarkerType.sameFunction,
   ];
   Map<String?, TextSpan> texts = {};
   String toSplit = '';
@@ -183,8 +188,11 @@ class SuperRichText extends StatelessWidget {
         ),
         super(key: key);
 
-  TextSpan getTextSpan(
-      {required RegExpMatch regex, required MarkerText marker, int? index}) {
+  TextSpan getTextSpan({
+    required RegExpMatch regex,
+    required MarkerText marker,
+    int? index,
+  }) {
     return TextSpan(
         text: regex.group(0)!.replaceAll(marker.marker, ''),
         style: marker.style,
@@ -239,14 +247,20 @@ class SuperRichText extends StatelessWidget {
             : null);
   }
 
-  insertValues(
-      {required List<RegExpMatch> found, String? pattern, MarkerText? marker}) {
+  insertValues({
+    required List<RegExpMatch> found,
+    String? pattern,
+    MarkerText? marker,
+  }) {
     if (found.length > 0) {
       int index = 0;
       toSplit += '$pattern|';
 
-      found.forEach((f) => texts[f.group(0)!] =
-          getTextSpan(regex: f, index: index++, marker: marker!));
+      found.forEach((f) => texts[f.group(0)!] = getTextSpan(
+            regex: f,
+            index: index++,
+            marker: marker!,
+          ));
     }
   }
 
@@ -288,19 +302,13 @@ class SuperRichText extends StatelessWidget {
 
     }
 
-    final List<String> normalTexts =
-        toSplit != '' ? text.split(RegExp(toSplit)) : [text];
+    final List<String> normalTexts = toSplit != '' ? text.split(RegExp(toSplit)) : [text];
 
-    final List<String?> inSequence = toSplit != ''
-        ? RegExp(toSplit)
-            .allMatches(text)
-            .toList()
-            .map((v) => v.group(0)!)
-            .toList()
-        : [];
+    final List<String?> inSequence =
+        toSplit != '' ? RegExp(toSplit).allMatches(text).toList().map((v) => v.group(0)!).toList() : [];
 
     int i = 0;
-    final List<TextSpan?> finalList = [];
+    final List<TextSpan> finalList = [];
     normalTexts.forEach((v) {
       finalList.add(TextSpan(text: v));
 
@@ -314,18 +322,20 @@ class SuperRichText extends StatelessWidget {
 
     toSplit = '';
     return RichText(
-        key: key,
-        locale: locale,
-        maxLines: maxLines,
-        overflow: overflow,
-        softWrap: softWrap,
-        textAlign: textAlign,
-        strutStyle: strutStyle,
-        textDirection: textDirection,
-        textWidthBasis: textWidthBasis,
-        textScaleFactor: textScaleFactor,
-        text: TextSpan(
-            children: finalList as List<InlineSpan>?,
-            style: style ?? DefaultTextStyle.of(context).style));
+      key: key,
+      locale: locale,
+      maxLines: maxLines,
+      overflow: overflow,
+      softWrap: softWrap,
+      textAlign: textAlign,
+      strutStyle: strutStyle,
+      textDirection: textDirection,
+      textWidthBasis: textWidthBasis,
+      textScaleFactor: textScaleFactor,
+      text: TextSpan(
+        children: finalList,
+        style: style ?? DefaultTextStyle.of(context).style,
+      ),
+    );
   }
 }
